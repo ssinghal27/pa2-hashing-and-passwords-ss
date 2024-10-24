@@ -54,53 +54,40 @@ void hexstr_to_hash(char hexstr[], unsigned char hash[32]){
 }
 
 int8_t check_password(char password[], unsigned char given_hash[32]){
-	unsigned char hash[32];  
-    	SHA256((unsigned char*)password, strlen(password), hash);  
-    
-    	int i = 0;
-    	for (i = 0; i < 32; i++) {
-        	if (hash[i] != given_hash[i]) {
-            		return 0;  
-        	}
-    	}
-    
-    	return 1;  
+    unsigned char computed_hash[32];
+    SHA256((unsigned char*)password, strlen(password), computed_hash);
+   
+    int i;
+    for (i = 0; i < 32; i++) {
+        if (computed_hash[i] != given_hash[i]) {
+            return 0; 
+        }
+    }
+    return 1;	
 }
 
 
 int8_t crack_password(char password[], unsigned char given_hash[]){
-	unsigned char hash[32];
-
-    SHA256((unsigned char*)password, strlen(password), hash);
-    if (memcmp(hash, given_hash, 32) == 0) {
-        return 1;
-    }
-
+    if (check_password(password, given_hash)) return 1;
+    
+    int len = strlen(password);
     int i;
-    for (i = 0; password[i] != '\0'; i++) {
-        char original_char = password[i];
-
-        if (password[i] >= 'A' && password[i] <= 'Z') {
-            password[i] = password[i] + 32; // Convert to lowercase
-            SHA256((unsigned char*)password, strlen(password), hash);
-            if (memcmp(hash, given_hash, 32) == 0) {
-                return 1;
-            }
-            password[i] = original_char;
-        }
-
+    for (i = 0; i < len; i++) {
         if (password[i] >= 'a' && password[i] <= 'z') {
-            password[i] = password[i] - 32; // Convert to uppercase
-            SHA256((unsigned char*)password, strlen(password), hash);
-            if (memcmp(hash, given_hash, 32) == 0) {
-                return 1;
-            }
-            password[i] = original_char;
+            password[i] -= 32; 
+            if (check_password(password, given_hash)) return 1;
+            password[i] += 32; 
+        } else if (password[i] >= 'A' && password[i] <= 'Z') {
+            password[i] += 32; 
+            if (check_password(password, given_hash)) return 1;
+            password[i] -= 32; 
         }
     }
-
     return 0;
 }
+
+    
+
 
 
 
@@ -124,26 +111,24 @@ void test_hexstr_to_hash() {
   assert(hash[31] == 0xfd);
 }
 
-const int testing = 1;
 int main(int argc, char** argv) {
-unsigned char given_hash[32];
-    char hash_as_hexstr[] = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8";
-    hexstr_to_hash(hash_as_hexstr, given_hash);
-
+    unsigned char given_hash[32];
+    if (argc < 2) {
+        printf("Usage: %s <hash>\n", argv[0]);
+        return 1;
+    }
+    
+    hexstr_to_hash(argv[1], given_hash);
+    
     char password[256];
     while (fgets(password, sizeof(password), stdin)) {
-        password[strcspn(password, "\n")] = 0;  // Remove newline character
-
-        if (check_password(password, given_hash)) {
-           printf("Found password: SHA256(%s) = ", password);
-	   for (int i = 0; i < 32; i++) {
-    		printf("%02x", hash[i]);
-		}
-	   printf("\n");          
-	  return 0;
+        password[strcspn(password, "\n")] = 0; 
+        if (crack_password(password, given_hash)) {
+            printf("Found password: SHA256(%s) = %s\n", password, argv[1]);
+            return 0;
         }
     }
-
+    
     printf("Did not find a matching password\n");
     return 1;
 }
