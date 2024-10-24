@@ -1,0 +1,1 @@
+In lab, I got Anya's help a good amount with compiling stuff and also fixing my IENG6 server issues. I also had the general help from TA's in the lab when they explained segmentation faults in lab, because that was something I ran into. 
