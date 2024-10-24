@@ -135,8 +135,12 @@ unsigned char given_hash[32];
         password[strcspn(password, "\n")] = 0;  // Remove newline character
 
         if (check_password(password, given_hash)) {
-            printf("Found password: %s\n", password);  // Print the matching password
-            return 0;
+           printf("Found password: SHA256(%s) = ", password);
+	   for (int i = 0; i < 32; i++) {
+    		printf("%02x", hash[i]);
+		}
+	   printf("\n");          
+	  return 0;
         }
     }
 
