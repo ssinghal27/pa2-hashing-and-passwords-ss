@@ -126,25 +126,22 @@ void test_hexstr_to_hash() {
 
 const int testing = 1;
 int main(int argc, char** argv) {
-  if(testing) {
-    test_hex_to_byte();
-   // test_hexstr_to_hash();
-    printf("Tests passed!\n ");
-    char hash_as_hexstr[] = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"; // SHA256 hash for "password"
-    unsigned char given_hash[32];
+unsigned char given_hash[32];
+    char hash_as_hexstr[] = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8";
     hexstr_to_hash(hash_as_hexstr, given_hash);
-    assert(check_password("password", given_hash) == 1);
-    assert(check_password("wrongpass", given_hash) == 0);
-    printf("Tests passed!\n ");
-  }
- char password[] = "paSsword";
- char hash_as_hexstr[] = "5e884898da28047151d0e56f8dc6292773603d0d6aabbdd62a11ef721d1542d8"; // SHA256 hash of "password"
- unsigned char given_hash[32];
- hexstr_to_hash(hash_as_hexstr, given_hash);
- int8_t match = crack_password(password, given_hash);
- assert(match == 1);
- assert(password[2] == 's'); // the uppercase 'S' has been lowercased
- printf("Tests Passed!\n");
+
+    char password[256];
+    while (fgets(password, sizeof(password), stdin)) {
+        password[strcspn(password, "\n")] = 0;  // Remove newline character
+
+        if (check_password(password, given_hash)) {
+            printf("Found password: %s\n", password);  // Print the matching password
+            return 0;
+        }
+    }
+
+    printf("Did not find a matching password\n");
+    return 1;
 }
 
 
